@@ -120,8 +120,8 @@
 
             $('#get-form').submit(function(event) {
                 event.preventDefault();
-                var url = $('#url').val();
-                var videoId = $('#video-id').val();
+                var url = $('#direct-url').val();
+                var videoId = $('#direct-video-id').val();
                 $('#get-result').empty();
                 showLoadingSpinner('#get-result');
                 $.get('/get?url=' + url + '&id=' + videoId, function(data) {
