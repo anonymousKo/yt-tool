@@ -77,7 +77,12 @@ def download_directly():
     try:
         process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         output, _ = process.communicate()
-        video_data = json.loads(output)
+
+        # Check if the output is valid JSON
+        try:
+            video_data = json.loads(output)
+        except json.JSONDecodeError:
+            return 'Error: Failed to retrieve video information.'
 
         # Extract video title and sanitize it for the filename
         video_title = video_data['title']
@@ -101,7 +106,7 @@ def download_directly():
 
     except subprocess.CalledProcessError as e:
         return f'Error: {e.output}'
-
+        
 if __name__ == '__main__':
     app.run(port=8095,host='0.0.0.0')
 
