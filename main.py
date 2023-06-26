@@ -89,7 +89,7 @@ def download_directly():
 
         # Set the appropriate headers for the file download
         headers = {
-            'File-Format': video_extension,
+            'Content-Type': 'application/octet-stream',
             'Content-Disposition': f'attachment; filename="{video_title}.{video_extension}"'
         }
 
