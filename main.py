@@ -72,10 +72,14 @@ def download_directly():
     video_id = request.args.get('video_id')
     command = f'yt-dlp -f {video_id} {url} -j'
 
-    try:
+     try:
         # Execute yt-dlp command and capture the output
         process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        output, _ = process.communicate()
+        output, error = process.communicate()
+
+        # Check for errors
+        if process.returncode != 0:
+            return f'Error: {error}'
 
         # Print the output
         print(output)
@@ -91,12 +95,21 @@ def download_directly():
             'Content-Disposition': f'attachment; filename="{video_title}.{video_extension}"'
         }
 
-        # Create a Flask response with the output as the file content
-        response = Response(video_data, headers=headers)
+        # Create a BytesIO object to hold the file content in memory
+        file_content = BytesIO()
+
+        # Write the output to the BytesIO object
+        file_content.write(output)
+
+        # Set the file position to the beginning
+        file_content.seek(0)
+
+        # Create a Flask response with the file content as the response body
+        response = Response(file_content, headers=headers)
         return response
 
-    except subprocess.CalledProcessError as e:
-        return f'Error: {e.output}'
+    except Exception as e:
+        return f'Error: {str(e)}'
         
 if __name__ == '__main__':
     app.run(port=8095,host='0.0.0.0')
