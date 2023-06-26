@@ -71,19 +71,18 @@ def get_filename_by_id(file_id):
 def download_directly():
     url = request.args.get('url')
     video_id = request.args.get('video_id')
-    command = f'yt-dlp -f {video_id} {url} -j'
 
     try:
         # Execute yt-dlp command and capture the output
-        process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        process = subprocess.Popen(['yt-dlp', '-f', video_id, url, '-j'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         output, error = process.communicate()
 
         # Check for errors
         if process.returncode != 0:
-            return f'Error: {error}'
+            return f'Error: {error.decode()}'
 
         # Parse the JSON output containing video metadata
-        video_data = json.loads(output)
+        video_data = json.loads(output.decode())
         video_title = video_data['title']
         video_extension = video_data['ext']
 
@@ -105,6 +104,9 @@ def download_directly():
         # Create a Flask response with the file content as the response body
         response = Response(file_content.getvalue(), headers=headers)
         return response
+
+    except subprocess.CalledProcessError as e:
+        return f'Error: {str(e)}'
 
     except Exception as e:
         return f'Error: {str(e)}'
