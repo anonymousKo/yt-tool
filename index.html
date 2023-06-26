@@ -3,13 +3,72 @@
 <head>
     <title>Video Downloader</title>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        .spinner {
+            margin: 10px auto;
+            width: 50px;
+            height: 40px;
+            text-align: center;
+            font-size: 10px;
+        }
+
+        .spinner > div {
+            background-color: #333;
+            height: 100%;
+            width: 6px;
+            display: inline-block;
+            -webkit-animation: stretchdelay 1.2s infinite ease-in-out;
+            animation: stretchdelay 1.2s infinite ease-in-out;
+        }
+
+        .spinner .rect2 {
+            -webkit-animation-delay: -1.1s;
+            animation-delay: -1.1s;
+        }
+
+        .spinner .rect3 {
+            -webkit-animation-delay: -1.0s;
+            animation-delay: -1.0s;
+        }
+
+        .spinner .rect4 {
+            -webkit-animation-delay: -0.9s;
+            animation-delay: -0.9s;
+        }
+
+        .spinner .rect5 {
+            -webkit-animation-delay: -0.8s;
+            animation-delay: -0.8s;
+        }
+
+        @-webkit-keyframes stretchdelay {
+            0%, 40%, 100% { -webkit-transform: scaleY(0.4) }
+            20% { -webkit-transform: scaleY(1.0) }
+        }
+
+        @keyframes stretchdelay {
+            0%, 40%, 100% {
+                transform: scaleY(0.4);
+                -webkit-transform: scaleY(0.4);
+            }  20% {
+                transform: scaleY(1.0);
+                -webkit-transform: scaleY(1.0);
+            }
+        }
+    </style>
     <script>
         $(document).ready(function() {
             $('#info-form').submit(function(event) {
                 event.preventDefault();
                 var url = $('#url').val();
+                $('#info-result').empty();
+                showLoadingSpinner('#info-result');
                 $.get('/info?url=' + url, function(data) {
                     $('#info-result').text(data);
+                }).fail(function() {
+                    $('#info-result').text('Error occurred.');
+                }).always(function() {
+                    hideLoadingSpinner('#info-result');
                 });
             });
 
@@ -17,27 +76,45 @@
                 event.preventDefault();
                 var url = $('#url').val();
                 var videoId = $('#video-id').val();
+                $('#download-result').empty();
+                showLoadingSpinner('#download-result');
                 $.get('/download?url=' + url + '&id=' + videoId, function(data) {
                     $('#download-result').text(data);
+                }).fail(function() {
+                    $('#download-result').text('Error occurred.');
+                }).always(function() {
+                    hideLoadingSpinner('#download-result');
                 });
             });
 
             $('#list-form').submit(function(event) {
                 event.preventDefault();
+                $('#file-list').empty();
+                showLoadingSpinner('#file-list');
                 $.get('/list', function(data) {
                     $('#file-list').text(data);
+                }).fail(function() {
+                    $('#file-list').text('Error occurred.');
+                }).always(function() {
+                    hideLoadingSpinner('#file-list');
                 });
             });
 
             $('#getFile-form').submit(function(event) {
                 event.preventDefault();
                 var fileId = $('#file-id').val();
+                $('#get-file-result').empty();
+                showLoadingSpinner('#get-file-result');
                 $.get('/getFile?id=' + fileId, function(data) {
                     if (data !== 'File not found.') {
                         window.location.href = '/getFile?id=' + fileId;
                     } else {
                         $('#get-file-result').text(data);
                     }
+                }).fail(function() {
+                    $('#get-file-result').text('Error occurred.');
+                }).always(function() {
+                    hideLoadingSpinner('#get-file-result');
                 });
             });
 
@@ -45,15 +122,36 @@
                 event.preventDefault();
                 var url = $('#url').val();
                 var videoId = $('#video-id').val();
+                $('#get-result').empty();
+                showLoadingSpinner('#get-result');
                 $.get('/get?url=' + url + '&id=' + videoId, function(data) {
                     var blob = new Blob([data], { type: 'application/octet-stream' });
                     var link = document.createElement('a');
                     link.href = window.URL.createObjectURL(blob);
                     link.download = 'video.' + videoId;
                     link.click();
+                }).fail(function() {
+                    $('#get-result').text('Error occurred.');
+                }).always(function() {
+                    hideLoadingSpinner('#get-result');
                 });
             });
         });
+
+        function showLoadingSpinner(elementId) {
+            var spinnerHtml = '<div class="spinner">' +
+                '<div class="rect1"></div>' +
+                '<div class="rect2"></div>' +
+                '<div class="rect3"></div>' +
+                '<div class="rect4"></div>' +
+                '<div class="rect5"></div>' +
+                '</div>';
+            $(elementId).html(spinnerHtml);
+        }
+
+        function hideLoadingSpinner(elementId) {
+            $(elementId).find('.spinner').remove();
+        }
     </script>
 </head>
 <body>
@@ -65,7 +163,7 @@
         <input type="text" id="url" name="url" required>
         <button type="submit">Get Info</button>
     </form>
-    <pre id="info-result"></pre>
+    <div id="info-result"></div>
 
     <h2>Download Video</h2>
     <form id="download-form">
@@ -75,13 +173,13 @@
         <input type="text" id="video-id" name="video-id" required>
         <button type="submit">Download</button>
     </form>
-    <pre id="download-result"></pre>
+    <div id="download-result"></div>
 
     <h2>List Files</h2>
     <form id="list-form">
         <button type="submit">List Files</button>
     </form>
-    <pre id="file-list"></pre>
+    <div id="file-list"></div>
 
     <h2>Download File</h2>
     <form id="getFile-form">
@@ -89,7 +187,7 @@
         <input type="text" id="file-id" name="file-id" required>
         <button type="submit">Download</button>
     </form>
-    <pre id="get-file-result"></pre>
+    <div id="get-file-result"></div>
 
     <h2>Download Video Directly</h2>
     <form id="get-form">
@@ -99,5 +197,6 @@
         <input type="text" id="video-id" name="video-id" required>
         <button type="submit">Download</button>
     </form>
+    <div id="get-result"></div>
 </body>
 </html>
