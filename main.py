@@ -82,9 +82,6 @@ def download_directly():
         if process.returncode != 0:
             return f'Error: {error}'
 
-        # Print the output
-        print(output)
-
         # Parse the JSON output containing video metadata
         video_data = json.loads(output)
         video_title = video_data['title']
@@ -106,7 +103,7 @@ def download_directly():
         file_content.seek(0)
 
         # Create a Flask response with the file content as the response body
-        response = Response(file_content, headers=headers)
+        response = Response(file_content.getvalue(), headers=headers)
         return response
 
     except Exception as e:
