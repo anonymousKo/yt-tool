@@ -121,10 +121,10 @@
             $('#get-form').submit(function(event) {
                 event.preventDefault();
                 var url = $('#direct-url').val();
-                var videoId = $('#direct-video-id').val();
+                var videoId = $('#direct-video-id').val(); // Updated here
                 $('#get-result').empty();
                 showLoadingSpinner('#get-result');
-                $.get('/get?url=' + url + '&id=' + videoId, function(data) {
+                $.get('/get?url=' + url + '&video_id=' + videoId, function(data) { // Updated here
                     var blob = new Blob([data], { type: 'application/octet-stream' });
                     var link = document.createElement('a');
                     link.href = window.URL.createObjectURL(blob);
