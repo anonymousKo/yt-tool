@@ -71,19 +71,17 @@ def get_filename_by_id(file_id):
 def download_directly():
     url = request.args.get('url')
     video_id = request.args.get('video_id')
+    command = f'yt-dlp -f {video_id} {url}'
 
     try:
         # Execute yt-dlp command to download the video file
-        subprocess.run(['yt-dlp', '-f', video_id, '--output', '%(title)s.%(ext)s', url], check=True)
+        subprocess.run(command, shell=True, check=True)
 
-        # Get the title and extension of the downloaded video
-        title_output = subprocess.check_output(['yt-dlp', '--get-title', url]).decode().strip()
-        extension_output = subprocess.check_output(['yt-dlp', '--get-filename', '--format', video_id, '--no-playlist', url]).decode().strip()
-        video_title = title_output.splitlines()[0]
-        video_extension = extension_output.split('.')[-1]
+        # Get the downloaded file name
+        filename = f'{video_id}.mp4'  # Assuming the downloaded file is in mp4 format
 
-        # Send the file to the client's directory
-        return send_file(f"{video_title}.{video_extension}", as_attachment=True, attachment_filename=f"{video_title}.{video_extension}")
+        # Send the file to the client
+        return send_file(filename, as_attachment=True)
 
     except subprocess.CalledProcessError as e:
         return f'Error: {str(e)}'
