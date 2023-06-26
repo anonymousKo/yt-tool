@@ -2,8 +2,6 @@ from flask import Flask, request, send_from_directory, send_file, Response
 import subprocess
 import os
 import json
-import requests
-import urllib.parse
 
 app = Flask(__name__)
 
@@ -71,38 +69,31 @@ def get_filename_by_id(file_id):
 @app.route('/get', methods=['GET'])
 def download_directly():
     url = request.args.get('url')
-    video_id = request.args.get('id')
+    video_id = request.args.get('video_id')
     command = f'yt-dlp -f {video_id} {url} -j'
 
     try:
+        # Execute yt-dlp command and capture the output
         process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         output, _ = process.communicate()
 
-        # Check if the output is valid JSON
-        try:
-            video_data = json.loads(output)
-        except json.JSONDecodeError:
-            return 'Error: Failed to retrieve video information.'
+        # Print the output
+        print(output)
 
-        # Extract video title and sanitize it for the filename
+        # Parse the JSON output containing video metadata
+        video_data = json.loads(output)
         video_title = video_data['title']
-        sanitized_title = urllib.parse.quote_plus(video_title)  # URL encode the title
-
-        # Get the direct video URL
-        video_url = video_data['url']
-
-        # Send a request to get the video content
-        response = requests.get(video_url, stream=True)
+        video_extension = video_data['ext']
 
         # Set the appropriate headers for the file download
         headers = {
-            'Content-Type': 'video/mp4',
-            'Content-Disposition': f'attachment; filename="{sanitized_title}.mp4"'
+            'Content-Type': 'application/octet-stream',
+            'Content-Disposition': f'attachment; filename="{video_title}.{video_extension}"'
         }
 
-        # Create a Flask response with the video content as the file content
-        file_response = Response(response.iter_content(chunk_size=1024), headers=headers)
-        return file_response
+        # Create a Flask response with the output as the file content
+        response = Response(video_data, headers=headers)
+        return response
 
     except subprocess.CalledProcessError as e:
         return f'Error: {e.output}'
