@@ -70,7 +70,7 @@ def get_filename_by_id(file_id):
 
 @app.route('/get', methods=['GET'])
 def download_directly():
-        url = request.args.get('url')
+    url = request.args.get('url')
     video_id = request.args.get('id')
     command = f'yt-dlp -f {video_id} {url} -j'
 
