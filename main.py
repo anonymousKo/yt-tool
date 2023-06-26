@@ -69,23 +69,19 @@ def get_filename_by_id(file_id):
 
 @app.route('/get', methods=['GET'])
 def download_directly():
+    @app.route('/get', methods=['GET'])
+def download_directly():
     url = request.args.get('url')
     video_id = request.args.get('video_id')
-    command = f'yt-dlp -f {video_id} {url} -j'
+    command = f'yt-dlp -f {video_id} {url} -o "%(title)s.%(ext)s"'
 
     try:
-        # Execute yt-dlp command and capture the output
-        process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        output, error = process.communicate()
+        # Execute yt-dlp command to download the video file
+        subprocess.run(command, shell=True, check=True)
 
-        # Check for errors
-        if process.returncode != 0:
-            return f'Error: {error}'
-
-        # Parse the JSON output containing video metadata
-        video_data = json.loads(output)
-        video_title = video_data['title']
-        video_extension = video_data['ext']
+        # Get the title and extension of the downloaded video
+        video_title = subprocess.check_output(f'yt-dlp --get-title {url}', shell=True).decode().strip()
+        video_extension = subprocess.check_output(f'yt-dlp --get-filename {url} --format {video_id} --no-playlist', shell=True).decode().split('.')[-1]
 
         # Set the appropriate headers for the file download
         headers = {
@@ -93,29 +89,22 @@ def download_directly():
             'Content-Disposition': f'attachment; filename="{video_title}.{video_extension}"'
         }
 
-        # Create a BytesIO object to hold the file content in memory
-        file_content = BytesIO()
-
-        # Write the output to the BytesIO object
-        file_content.write(output)
-
-        # Set the file position to the beginning
-        file_content.seek(0)
+        # Read the file content
+        file_path = f"{video_title}.{video_extension}"
+        with open(file_path, 'rb') as file:
+            file_content = file.read()
 
         # Create a Flask response with the file content as the response body
-        response = Response(file_content.getvalue(), headers=headers)
-        @after_this_request
-        def add_header(response):
-            # Disable caching
-            response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
-            response.headers['Pragma'] = 'no-cache'
-            response.headers['Expires'] = '0'
-            # Disable session for this route
-            response.headers['Set-Cookie'] = 'session=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT;'
-            return response
-            
+        response = Response(file_content, headers=headers)
+
+        # Delete the file from the server
+        os.remove(file_path)
+
         return response
-        
+
+    except subprocess.CalledProcessError as e:
+        return f'Error: {str(e)}'
+
     except Exception as e:
         return f'Error: {str(e)}'
         
