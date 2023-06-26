@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>YouTube Downloader</title>
+    <style>
+        .result {
+            margin-bottom: 20px;
+        }
+        .result-title {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .result-details {
+            margin-left: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>YouTube Downloader</h1>
+
+    <h2>Get Video Info</h2>
+    <form action="/info" method="get">
+        <label for="url">URL:</label>
+        <input type="text" id="url" name="url" required>
+        <input type="submit" value="Get Info">
+    </form>
+
+    <h2>Download Video</h2>
+    <form action="/download" method="get">
+        <label for="url">URL:</label>
+        <input type="text" id="url" name="url" required>
+        <br>
+        <label for="id">ID:</label>
+        <input type="text" id="id" name="id" required>
+        <input type="submit" value="Download">
+    </form>
+
+    <h2>List Files</h2>
+    <a href="/list">View Files</a>
+
+    <h2>Download File</h2>
+    <form action="/get" method="get">
+        <label for="id">ID:</label>
+        <input type="text" id="id" name="id" required>
+        <input type="submit" value="Download">
+    </form>
+
+    <h2>Result:</h2>
+    <div id="result-container"></div>
+    <script>
+    // JavaScript code to handle the display of the result
+    document.addEventListener("DOMContentLoaded", function() {
+        const resultContainer = document.getElementById("result-container");
+        const result = `{{ result }}`;  // Replace with the actual result from the Flask endpoint
+
+        if (result) {
+            const formattedResult = result.replace(/\n/g, "<br>");
+            resultContainer.innerHTML = `<pre>${formattedResult}</pre>`;
+        }
+    });
+</script>
+
+</body>
+</html>
+

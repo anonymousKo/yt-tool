@@ -1,8 +1,12 @@
-from flask import Flask, request, send_from_directory, send_file
+from flask import Flask, request, send_from_directory, send_file, Response
 import subprocess
 import os
 
 app = Flask(__name__)
+
+@app.route('/')
+def home():
+    return send_file('index.html')
 
 @app.route('/info', methods=['GET'])
 def get_video_info():
@@ -37,7 +41,7 @@ def list_files():
     return '\n'.join(FILE_CACHE)
 
 
-@app.route('/get', methods=['GET'])
+@app.route('/getFile', methods=['GET'])
 def download_file():
     id = request.args.get('id')
     filename = get_filename_by_id(id)
@@ -59,6 +63,36 @@ def get_filename_by_id(file_id):
         filename = FILE_CACHE[index].split(', Filename: ')[1]
         return filename.strip()
     return None
+
+
+@app.route('/get', methods=['GET'])
+def download_directly():
+    url = request.args.get('url')
+    video_id = request.args.get('id')
+    command = f'yt-dlp -f {video_id} {url} -j'
+
+    try:
+        # Execute yt-dlp command and capture the output
+        process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        output, _ = process.communicate()
+
+        # Parse the JSON output containing video metadata
+        video_data = json.loads(output)
+        video_title = video_data['title']
+        video_extension = video_data['ext']
+
+        # Set the appropriate headers for the file download
+        headers = {
+            'Content-Type': 'application/octet-stream',
+            'Content-Disposition': f'attachment; filename="{video_title}.{video_extension}"'
+        }
+
+        # Create a Flask response with the output as the file content
+        response = Response(output, headers=headers)
+        return response
+
+    except subprocess.CalledProcessError as e:
+        return f'Error: {e.output}'
 
 if __name__ == '__main__':
     app.run(port=8095,host='0.0.0.0')
