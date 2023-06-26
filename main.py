@@ -71,15 +71,16 @@ def get_filename_by_id(file_id):
 def download_directly():
     url = request.args.get('url')
     video_id = request.args.get('video_id')
-    command = f'yt-dlp -f {video_id} {url} -o "%(title)s.%(ext)s"'
 
     try:
         # Execute yt-dlp command to download the video file
-        subprocess.run(command, shell=True, check=True)
+        subprocess.run(['yt-dlp', '-f', video_id, '--output', '%(title)s.%(ext)s', url], check=True)
 
         # Get the title and extension of the downloaded video
-        video_title = subprocess.check_output(f'yt-dlp --get-title {url}', shell=True).decode().strip()
-        video_extension = subprocess.check_output(f'yt-dlp --get-filename {url} --format {video_id} --no-playlist', shell=True).decode().split('.')[-1]
+        title_output = subprocess.check_output(['yt-dlp', '--get-title', url]).decode().strip()
+        extension_output = subprocess.check_output(['yt-dlp', '--get-filename', '--format', video_id, '--no-playlist', url]).decode().strip()
+        video_title = title_output.splitlines()[0]
+        video_extension = extension_output.split('.')[-1]
 
         # Set the appropriate headers for the file download
         headers = {
@@ -87,18 +88,8 @@ def download_directly():
             'Content-Disposition': f'attachment; filename="{video_title}.{video_extension}"'
         }
 
-        # Read the file content
-        file_path = f"{video_title}.{video_extension}"
-        with open(file_path, 'rb') as file:
-            file_content = file.read()
-
-        # Create a Flask response with the file content as the response body
-        response = Response(file_content, headers=headers)
-
-        # Delete the file from the server
-        os.remove(file_path)
-
-        return response
+        # Send the file to the client's directory
+        return send_file(f"{video_title}.{video_extension}", as_attachment=True, attachment_filename=f"{video_title}.{video_extension}")
 
     except subprocess.CalledProcessError as e:
         return f'Error: {str(e)}'
