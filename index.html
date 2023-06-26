@@ -121,20 +121,8 @@
             $('#get-form').submit(function(event) {
                 event.preventDefault();
                 var url = $('#direct-url').val();
-                var videoId = $('#direct-video-id').val(); // Updated here
-                $('#get-result').empty();
-                showLoadingSpinner('#get-result');
-                $.get('/get?url=' + url + '&video_id=' + videoId, function(data) { // Updated here
-                    var blob = new Blob([data], { type: 'application/octet-stream' });
-                    var link = document.createElement('a');
-                    link.href = window.URL.createObjectURL(blob);
-                    link.download = 'video.' + videoId;
-                    link.click();
-                }).fail(function() {
-                    $('#get-result').text('Error occurred.');
-                }).always(function() {
-                    hideLoadingSpinner('#get-result');
-                });
+                var videoId = $('#direct-video-id').val();
+                window.location.href = '/get?url=' + url + '&video_id=' + videoId;
             });
         });
 
