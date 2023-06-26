@@ -1,4 +1,4 @@
-from flask import Flask, request, send_from_directory, send_file, Response
+from flask import Flask, request, send_from_directory, Response, , after_this_request
 import subprocess
 import os
 import json
@@ -104,8 +104,18 @@ def download_directly():
 
         # Create a Flask response with the file content as the response body
         response = Response(file_content.getvalue(), headers=headers)
+        @after_this_request
+        def add_header(response):
+            # Disable caching
+            response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+            response.headers['Pragma'] = 'no-cache'
+            response.headers['Expires'] = '0'
+            # Disable session for this route
+            response.headers['Set-Cookie'] = 'session=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT;'
+            return response
+            
         return response
-
+        
     except Exception as e:
         return f'Error: {str(e)}'
         
