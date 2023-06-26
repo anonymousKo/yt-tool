@@ -74,7 +74,10 @@ def download_directly():
 
     try:
         # Execute yt-dlp command and capture the output
-        process = subprocess.Popen(['yt-dlp', '-f', video_id, url, '-j'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        command = ['yt-dlp', '-f', video_id, url, '-j']
+        print("Command:", ' '.join(command))
+        process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
         output, error = process.communicate()
 
         # Check for errors
