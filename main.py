@@ -71,23 +71,42 @@ def get_filename_by_id(file_id):
 def download_directly():
     url = request.args.get('url')
     video_id = request.args.get('video_id')
-    command = f'yt-dlp -f {video_id} {url}'
+    command = f'yt-dlp -f {video_id} --get-filename -o "%(title)s.%(ext)s" {url}'
 
     try:
-        # Execute yt-dlp command to download the video file
-        subprocess.run(command, shell=True, check=True)
+        # Execute yt-dlp command to get the original filename
+        process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        output, error = process.communicate()
 
-        # Get the downloaded file name
-        filename = f'{video_id}.mp4'  # Assuming the downloaded file is in mp4 format
+        # Check for errors
+        if process.returncode != 0:
+            return f'Error: {error}'
 
-        # Send the file to the client
-        return send_file(filename, as_attachment=True)
+        # Get the original filename
+        filename = output.decode().strip()
+
+        # Download the video file
+        download_command = f'yt-dlp -f {video_id} -o "{filename}" {url}'
+        subprocess.run(download_command, shell=True, check=True)
+
+        # Check if the file exists
+        if os.path.exists(filename):
+            # Send the file to the client
+            return send_file(filename, as_attachment=True)
+
+        else:
+            return 'Error: File not found.'
 
     except subprocess.CalledProcessError as e:
         return f'Error: {str(e)}'
 
     except Exception as e:
         return f'Error: {str(e)}'
+
+    finally:
+        # Delete the downloaded file
+        if os.path.exists(filename):
+            os.remove(filename)
         
 if __name__ == '__main__':
     app.run(port=8095,host='0.0.0.0')
