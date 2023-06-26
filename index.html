@@ -1,65 +1,103 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>YouTube Downloader</title>
-    <style>
-        .result {
-            margin-bottom: 20px;
-        }
-        .result-title {
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
-        .result-details {
-            margin-left: 20px;
-        }
-    </style>
+    <title>Video Downloader</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('#info-form').submit(function(event) {
+                event.preventDefault();
+                var url = $('#url').val();
+                $.get('/info?url=' + url, function(data) {
+                    $('#info-result').text(data);
+                });
+            });
+
+            $('#download-form').submit(function(event) {
+                event.preventDefault();
+                var url = $('#url').val();
+                var videoId = $('#video-id').val();
+                $.get('/download?url=' + url + '&id=' + videoId, function(data) {
+                    $('#download-result').text(data);
+                });
+            });
+
+            $('#list-form').submit(function(event) {
+                event.preventDefault();
+                $.get('/list', function(data) {
+                    $('#file-list').text(data);
+                });
+            });
+
+            $('#getFile-form').submit(function(event) {
+                event.preventDefault();
+                var fileId = $('#file-id').val();
+                $.get('/getFile?id=' + fileId, function(data) {
+                    if (data !== 'File not found.') {
+                        window.location.href = '/getFile?id=' + fileId;
+                    } else {
+                        $('#get-file-result').text(data);
+                    }
+                });
+            });
+
+            $('#get-form').submit(function(event) {
+                event.preventDefault();
+                var url = $('#url').val();
+                var videoId = $('#video-id').val();
+                $.get('/get?url=' + url + '&id=' + videoId, function(data) {
+                    var blob = new Blob([data], { type: 'application/octet-stream' });
+                    var link = document.createElement('a');
+                    link.href = window.URL.createObjectURL(blob);
+                    link.download = 'video.' + videoId;
+                    link.click();
+                });
+            });
+        });
+    </script>
 </head>
 <body>
-    <h1>YouTube Downloader</h1>
+    <h1>Video Downloader</h1>
 
-    <h2>Get Video Info</h2>
-    <form action="/info" method="get">
-        <label for="url">URL:</label>
+    <h2>Get Video Information</h2>
+    <form id="info-form">
+        <label for="url">Video URL:</label>
         <input type="text" id="url" name="url" required>
-        <input type="submit" value="Get Info">
+        <button type="submit">Get Info</button>
     </form>
+    <pre id="info-result"></pre>
 
     <h2>Download Video</h2>
-    <form action="/download" method="get">
-        <label for="url">URL:</label>
+    <form id="download-form">
+        <label for="url">Video URL:</label>
         <input type="text" id="url" name="url" required>
-        <br>
-        <label for="id">ID:</label>
-        <input type="text" id="id" name="id" required>
-        <input type="submit" value="Download">
+        <label for="video-id">Video ID:</label>
+        <input type="text" id="video-id" name="video-id" required>
+        <button type="submit">Download</button>
     </form>
+    <pre id="download-result"></pre>
 
     <h2>List Files</h2>
-    <a href="/list">View Files</a>
+    <form id="list-form">
+        <button type="submit">List Files</button>
+    </form>
+    <pre id="file-list"></pre>
 
     <h2>Download File</h2>
-    <form action="/get" method="get">
-        <label for="id">ID:</label>
-        <input type="text" id="id" name="id" required>
-        <input type="submit" value="Download">
+    <form id="getFile-form">
+        <label for="file-id">File ID:</label>
+        <input type="text" id="file-id" name="file-id" required>
+        <button type="submit">Download</button>
     </form>
+    <pre id="get-file-result"></pre>
 
-    <h2>Result:</h2>
-    <div id="result-container"></div>
-    <script>
-    // JavaScript code to handle the display of the result
-    document.addEventListener("DOMContentLoaded", function() {
-        const resultContainer = document.getElementById("result-container");
-        const result = `{{ result }}`;  // Replace with the actual result from the Flask endpoint
-
-        if (result) {
-            const formattedResult = result.replace(/\n/g, "<br>");
-            resultContainer.innerHTML = `<pre>${formattedResult}</pre>`;
-        }
-    });
-</script>
-
+    <h2>Download Video Directly</h2>
+    <form id="get-form">
+        <label for="url">Video URL:</label>
+        <input type="text" id="url" name="url" required>
+        <label for="video-id">Video ID:</label>
+        <input type="text" id="video-id" name="video-id" required>
+        <button type="submit">Download</button>
+    </form>
 </body>
 </html>
-
