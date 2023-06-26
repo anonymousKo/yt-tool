@@ -82,12 +82,6 @@ def download_directly():
         video_title = title_output.splitlines()[0]
         video_extension = extension_output.split('.')[-1]
 
-        # Set the appropriate headers for the file download
-        headers = {
-            'Content-Type': 'application/octet-stream',
-            'Content-Disposition': f'attachment; filename="{video_title}.{video_extension}"'
-        }
-
         # Send the file to the client's directory
         return send_file(f"{video_title}.{video_extension}", as_attachment=True, attachment_filename=f"{video_title}.{video_extension}")
 
