@@ -1,7 +1,7 @@
 $(document).ready(function() {
     $('#info-form').submit(function(event) {
         event.preventDefault();
-        var url = $('#url').val();
+        var url = $('#info-url').val();
         $('#info-result').empty();
         showLoadingSpinner('#info-result');
         $.get('/info?url=' + url, function(data) {
@@ -15,8 +15,8 @@ $(document).ready(function() {
 
     $('#download-form').submit(function(event) {
         event.preventDefault();
-        var url = $('#url').val();
-        var videoId = $('#video-id').val();
+        const url = $('#download-url').val();
+        const videoId = $('#video-id').val();
         $('#download-result').empty();
         showLoadingSpinner('#download-result');
         $.get('/download?url=' + url + '&id=' + videoId, function(data) {
@@ -28,7 +28,7 @@ $(document).ready(function() {
         });
     });
 
-    $('#list-form').submit(function(event) {
+    $('#list-button').click(function(event) {
         event.preventDefault();
         $('#file-list').empty();
         showLoadingSpinner('#file-list');

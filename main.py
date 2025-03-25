@@ -4,11 +4,15 @@ import os
 import json
 from io import BytesIO
 
-app = Flask(__name__, static_url_path='', static_folder='static')
+# Load configuration
+with open('config.json') as config_file:
+    config = json.load(config_file)
+
+app = Flask(__name__, static_url_path='/static', static_folder='static')
 
 @app.route('/')
 def home():
-    return send_file('index.html')
+    return send_from_directory('.', 'index.html')
 
 @app.route('/info', methods=['GET'])
 def get_video_info():
@@ -21,13 +25,17 @@ def get_video_info():
     except subprocess.CalledProcessError as e:
         return f'Error: {e.output}'
 
-DOWNLOAD_DIRECTORY = '/home/youtube-dl'
+DOWNLOAD_DIRECTORY = config['download_directory']
 
 @app.route('/download', methods=['GET'])
 def download_video():
     url = request.args.get('url')
     video_id = request.args.get('id')
-    command = f'yt-dlp -f {video_id} {url} -o "{DOWNLOAD_DIRECTORY}/%(title)s.%(ext)s"'
+    
+    # Determine the format option based on whether video_id is provided
+    format_option = f'-f {video_id}' if video_id else '-f bestvideo*+bestaudio/best'
+    
+    command = f'yt-dlp {format_option} {url} -o "{DOWNLOAD_DIRECTORY}/%(title)s.%(ext)s"'
 
     try:
         result = subprocess.check_output(command, shell=True, universal_newlines=True)
@@ -71,7 +79,11 @@ def get_filename_by_id(file_id):
 def download_directly():
     url = request.args.get('url')
     video_id = request.args.get('video_id')
-    command = f'yt-dlp -f {video_id} --get-filename -o "%(title)s.%(ext)s" {url}'
+    
+    # Determine the format option based on whether video_id is provided
+    format_option = f'-f {video_id}' if video_id else '-f best'
+    
+    command = f'yt-dlp {format_option} --get-filename -o "%(title)s.%(ext)s" {url}'
 
     try:
         # Execute yt-dlp command to get the original filename
@@ -86,7 +98,7 @@ def download_directly():
         filename = output.decode().strip()
 
         # Download the video file
-        download_command = f'yt-dlp -f {video_id} -o "{filename}" {url}'
+        download_command = f'yt-dlp {format_option} -o "{filename}" {url}'
         subprocess.run(download_command, shell=True, check=True)
 
         # Check if the file exists
@@ -109,5 +121,5 @@ def download_directly():
             os.remove(filename)
         
 if __name__ == '__main__':
-    app.run(port=8091,host='0.0.0.0')
+    app.run(port=config['port'], host=config['host'])
 
