@@ -34,3 +34,6 @@ MANIFEST
 
 # Installer logs
 pip-log.txt
+
+# VS Code settings
+.vscode/
